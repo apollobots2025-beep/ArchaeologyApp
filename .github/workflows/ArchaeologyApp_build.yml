@@ -53,7 +53,8 @@ jobs:
       # -----------------------------
       - name: Pre-download model for offline bundling
         shell: powershell
-        run: python -m transformers.cli download microsoft/resnet-50 --cache-dir hf_models/resnet50
+        run: python tools/prep_model.py --model microsoft/resnet-50 --out hf_models/resnet50
+
 
       # -----------------------------
       # 7. Build EXE with PyInstaller (fully offline)
