@@ -1,8 +1,8 @@
-# Required runtime libraries for ArchaeologyApp
 pandas
 numpy
 openpyxl
 transformers
 Pillow
 pyinstaller
-# Note: torch/torchvision are installed separately in CI using the official CPU wheel URL
+torch
+torchvision
