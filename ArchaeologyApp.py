@@ -6,25 +6,22 @@ from transformers import pipeline
 from PIL import Image
 import torch
 
-
-
 # -----------------------------
 # CONFIG
 # -----------------------------
-CLS_MODEL_HF = "microsoft/resnet-50"  # remote id if local model not present
-BUNDLED_MODEL_DIR = os.path.join("hf_models", "resnet50")
-DEVICE = 0 if torch.cuda.is_available() else -1
+# Fully open model (no gated HF access required)
+CLS_MODEL_HF = "google/vit-base-patch16-224"
+BUNDLED_MODEL_DIR = os.path.join("hf_models", "vit-base")
+DEVICE = 0 if (torch.cuda.is_available() and torch.cuda.device_count() > 0) else -1
 EXCEL_FILE = "artifacts_results.xlsx"
 
 def get_model_source():
     """
-    Return the model path to pass to transformers.pipeline:
-    - If the application was bundled by PyInstaller and the model directory was added as data,
-      it will be available under sys._MEIPASS/<relative_path>.
-    - Else if hf_models/resnet50 exists next to the script, use it.
-    - Otherwise fall back to the HF hub id (online).
+    Returns the model path for pipeline:
+    - Use PyInstaller bundled directory if available
+    - Use local folder if present
+    - Otherwise fall back to HF ID (open model)
     """
-    # PyInstaller runtime extraction base path
     if getattr(sys, "frozen", False):
         base = getattr(sys, "_MEIPASS", None)
         if base:
@@ -32,11 +29,9 @@ def get_model_source():
             if os.path.exists(bundled):
                 return bundled
 
-    # Local folder (development or CI artifact present)
     if os.path.exists(BUNDLED_MODEL_DIR):
         return BUNDLED_MODEL_DIR
 
-    # Fall back to HF id (requires internet)
     return CLS_MODEL_HF
 
 # -----------------------------
@@ -71,7 +66,7 @@ def save_to_excel(results):
         old = pd.read_excel(EXCEL_FILE)
         df = pd.concat([old, df], ignore_index=True)
 
-    with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl", mode="w") as writer:
+    with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl", mode="w", if_sheet_exists="replace") as writer:
         df.to_excel(writer, index=False)
 
     print(f"📊 Results saved to {EXCEL_FILE}")
