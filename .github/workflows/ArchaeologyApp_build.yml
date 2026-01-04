@@ -1,4 +1,4 @@
-name: Build Standalone EXE (Offline)
+name: Build Standalone EXE (Offline + Fast Installs)
 
 on:
   push:
@@ -35,29 +35,47 @@ jobs:
         run: python -m pip install --upgrade pip setuptools wheel
 
       # -----------------------------
-      # 4. Install CPU-only PyTorch (offline-ready)
+      # 4. Install fast prebuilt dependencies
       # -----------------------------
-      - name: Install CPU-only PyTorch
+      - name: Install core dependencies (fast)
+        shell: powershell
+        run: |
+          python -m pip install --upgrade --prefer-binary `
+            numpy `
+            pandas `
+            pillow `
+            sympy `
+            networkx `
+            mpmath `
+            typing-extensions `
+            fsspec `
+            filelock `
+            MarkupSafe `
+            jinja2
+
+      # -----------------------------
+      # 5. Install CPU-only PyTorch
+      # -----------------------------
+      - name: Install CPU PyTorch
         shell: powershell
         run: python -m pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision --upgrade
 
       # -----------------------------
-      # 5. Install remaining dependencies
+      # 6. Install remaining packages
       # -----------------------------
-      - name: Install dependencies
+      - name: Install Transformers and Excel support
         shell: powershell
-        run: python -m pip install -r requirements_Version2.txt
+        run: python -m pip install transformers openpyxl
 
       # -----------------------------
-      # 6. Pre-download Hugging Face model
+      # 7. Pre-download ResNet-50 model for offline bundling
       # -----------------------------
-      - name: Pre-download model for offline bundling
+      - name: Pre-download HF ResNet-50 model
         shell: powershell
         run: python tools/prep_model.py --model microsoft/resnet-50 --out hf_models/resnet50
 
-
       # -----------------------------
-      # 7. Build EXE with PyInstaller (fully offline)
+      # 8. Build standalone EXE with PyInstaller
       # -----------------------------
       - name: Build standalone EXE
         shell: powershell
@@ -73,7 +91,7 @@ jobs:
             --add-data $add_data
 
       # -----------------------------
-      # 8. Show PyInstaller warnings (if any)
+      # 9. Show PyInstaller warnings
       # -----------------------------
       - name: Show PyInstaller warnings
         if: always()
@@ -89,7 +107,7 @@ jobs:
           }
 
       # -----------------------------
-      # 9. Run EXE to capture logs
+      # 10. Run EXE to capture logs
       # -----------------------------
       - name: Run built EXE
         if: always()
@@ -109,7 +127,7 @@ jobs:
           }
 
       # -----------------------------
-      # 10. Upload artifacts
+      # 11. Upload EXE and logs
       # -----------------------------
       - name: Upload EXE and logs
         uses: actions/upload-artifact@v4
