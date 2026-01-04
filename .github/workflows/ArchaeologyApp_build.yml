@@ -34,19 +34,8 @@ jobs:
         shell: powershell
 
       - name: Pre-download HF model for offline bundling
-        run: |
-          python -m transformers.cli download google/vit-base-patch16-224 --cache-dir hf_models/vit-base
+        run: python -m transformers.cli download google/vit-base-patch16-224 --cache-dir hf_models/vit-base
         shell: powershell
-
-            - name: Verify key packages import
-        shell: powershell
-        run: |
-          python -c "import sys; pkgs=['pandas','numpy','transformers','torch','PIL','openpyxl','pyinstaller']; missing=[]; \
-for p in pkgs: \
-    try: __import__(p if p!='PIL' else 'PIL'); \
-    except Exception as e: missing.append((p,str(e))); \
-if missing: print('Missing or failing imports:', missing); sys.exit(1); \
-else: print('All key packages import successfully.')"
 
 
       - name: Install/upgrade PyInstaller
@@ -54,17 +43,16 @@ else: print('All key packages import successfully.')"
         shell: powershell
 
       - name: Build EXE with PyInstaller
-        shell: powershell
         run: |
           $model_src = "hf_models\vit-base"
           $add_data = "$model_src;$model_src"
           pyinstaller --clean --onefile --icon="artifact.ico" ArchaeologyApp_Version3.py `
             --collect-all pandas --collect-all numpy --collect-all transformers --collect-all tokenizers --collect-all PIL `
             --add-data $add_data
+        shell: powershell
 
       - name: Show PyInstaller build warnings (if present)
         if: always()
-        shell: powershell
         run: |
           $warnFile = Join-Path $PWD "build\warnpylib"
           if (Test-Path $warnFile) {
@@ -74,10 +62,10 @@ else: print('All key packages import successfully.')"
           } else {
             Write-Host "No build warnpylib file found."
           }
+        shell: powershell
 
       - name: Run built EXE to capture runtime output
         if: always()
-        shell: powershell
         run: |
           $exe = Join-Path $PWD "dist\ArchaeologyApp.exe"
           if (Test-Path $exe) {
@@ -90,7 +78,7 @@ else: print('All key packages import successfully.')"
           } else {
             Write-Host "EXE not found at $exe"
             exit 1
-          }
+        shell: powershell
 
       - name: Upload build artifacts and logs
         uses: actions/upload-artifact@v4
