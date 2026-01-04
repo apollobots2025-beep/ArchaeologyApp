@@ -64,7 +64,7 @@ jobs:
         run: |
           $model_src = "hf_models\resnet50"
           $add_data = "$model_src;$model_src"
-          pyinstaller --clean --onefile --icon="artifact.ico" ArchaeologyApp_Version3.py `
+          pyinstaller --clean --onefile --icon="artifact.ico" ArchaeologyApp.py `
             --collect-all pandas `
             --collect-all numpy `
             --collect-all transformers `
