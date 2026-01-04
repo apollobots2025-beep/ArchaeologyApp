@@ -38,26 +38,16 @@ jobs:
           python -m transformers.cli download google/vit-base-patch16-224 --cache-dir hf_models/vit-base
         shell: powershell
 
-      - name: Verify key packages import
+            - name: Verify key packages import
         shell: powershell
         run: |
-          python - <<PY
-import sys
-pkgs = ['pandas','numpy','transformers','torch','PIL','openpyxl','pyinstaller']
-missing = []
-for p in pkgs:
-    try:
-        __import__(p if p != 'PIL' else 'PIL')
-    except Exception as e:
-        missing.append((p, str(e)))
-if missing:
-    print("Missing or failing imports:")
-    for m in missing:
-        print(m)
-    sys.exit(1)
-else:
-    print("All key packages import successfully.")
-PY
+          python -c "import sys; pkgs=['pandas','numpy','transformers','torch','PIL','openpyxl','pyinstaller']; missing=[]; \
+for p in pkgs: \
+    try: __import__(p if p!='PIL' else 'PIL'); \
+    except Exception as e: missing.append((p,str(e))); \
+if missing: print('Missing or failing imports:', missing); sys.exit(1); \
+else: print('All key packages import successfully.')"
+
 
       - name: Install/upgrade PyInstaller
         run: python -m pip install --upgrade pyinstaller
